@@ -1,5 +1,11 @@
 import json
 from flask import Flask,render_template,request,redirect,flash,url_for
+from datetime import datetime
+
+def filter_upcoming_competitions(competitions):
+    """Retourne une liste de compétitions à venir."""
+    current_datetime = datetime.now()
+    return [comp for comp in competitions if datetime.strptime(comp["date"], "%Y-%m-%d %H:%M:%S") > current_datetime]
 
 
 def loadClubs():
@@ -24,17 +30,19 @@ clubs = loadClubs()
 def index():
     return render_template('index.html', clubs=clubs)
 
-@app.route('/showSummary',methods=['POST'])
-def showSummary():
 
+@app.route('/showSummary', methods=['POST'])
+def showSummary():
+    # Trouve le club par email ou renvoie None si aucun n'est trouvé
+    club = next((club for club in clubs if club['email'] == request.form['email']), None)
     
-    club = [club for club in clubs if club['email'] == request.form['email']]
-    if club:
-        return render_template('welcome.html',club=club,competitions=competitions)
+    if club is None:  # Si aucun club n'a été trouvé
+        flash("This email doesn't exist")
+        return render_template('login.html')
     
-    else:
-        flash("Email introuvable")
-        return render_template('index.html',club=club,competitions=competitions)
+    # Continuez avec le reste de la logique si le club est trouvé
+    upcoming_competitions = filter_upcoming_competitions(competitions)
+    return render_template('welcome.html', club=club, competitions=upcoming_competitions)
 
 
 @app.route('/book/<competition>/<club>')
@@ -55,24 +63,35 @@ def purchasePlaces():
     club = [c for c in clubs if c['name'] == request.form['club']][0]
     placesRequired = int(request.form['places'])
     
-    
+    # Vérification si le nombre de places demandées est inférieur à 1
+    if placesRequired < 1:
+        if placesRequired == 0:
+            flash('You must book at least 1 place.')
+        else:
+            flash('The number of places cannot be negative.')
+        return render_template('booking.html', club=club, competition=competition)
+
+    # Vérification des points disponibles du club
     if int(club['points']) < placesRequired:
         flash('Not enough points to book these places.')
         return render_template('booking.html', club=club, competition=competition)
 
+    # Vérification du maximum de places autorisées par compétition
     if placesRequired > 12:
         flash('You cannot book more than 12 places per competition.')
         return render_template('booking.html', club=club, competition=competition)
 
+    # Vérification des places disponibles dans la compétition
     if placesRequired > int(competition['numberOfPlaces']):
         flash('Not enough places available.')
         return render_template('booking.html', club=club, competition=competition)
 
-    
+    # Effectuer la réservation et déduire les points et les places
     competition['numberOfPlaces'] = int(competition['numberOfPlaces']) - placesRequired
-    club['points'] = int(club['points']) - placesRequired  
+    club['points'] = int(club['points']) - placesRequired
     flash('Great - booking complete!')
     return render_template('welcome.html', club=club, competitions=competitions)
+
 
 # TODO: Add route for points display
 

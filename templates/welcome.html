@@ -7,38 +7,40 @@
 <body>
         <h2>Welcome, {{club['email']}} </h2><a href="{{url_for('logout')}}">Logout</a>
 
-    {% with messages = get_flashed_messages()%}
-    {% if messages %}
-        <ul>
-       {% for message in messages %}
-            <li>{{message}}</li>
-        {% endfor %}
-       </ul>
-    {% endif%}
-    <div class="display-points">
-        <h1>Club: {{club['name']}}</h1>
-        <h2>Points available: {{club['points']}}</h2>
-    </div>
-    <hr>
-    <div class="display-compete">
-        <h3>Competitions</h3>
-        <ul>
-            {% for comp in competitions%}
-            <li>
-                <h2>{{comp['name']}}</h2>
-                <p>Date: {{comp['date']}}</p>
-                <p>Number of Places: <strong>{{comp['numberOfPlaces']}}</strong></p>
-                {%if comp['numberOfPlaces']|int >0%}
-                <a href="{{ url_for('book',competition=comp['name'],club=club['name']) }}">Book Places</a>
-                {%else%}
-                <a href="{{ url_for('book',competition=comp['name'],club=club['name']) }}" aria-disabled="true">Book Places</a>
-                {%endif%}
-            </li>
-            <hr />
-            {% endfor %}
-        </ul>
-    </div>
-    {%endwith%}
+        {% with messages = get_flashed_messages()%}
+        <div class="body">
+            {% if messages %}
+                <ul>
+            {% for message in messages %}
+                    <li>{{message}}</li>
+                {% endfor %}
+            </ul>
+            {% endif%}
+            <div class="display-points">
+                <h1>Club: {{club['name']}}</h1>
+                <h2>Points available: {{club['points']}}</h2>
+            </div>
+            <hr>
+            <div class="display-compete">
+                <h3>Competitions</h3>
+                <ul>
+                    {% for comp in competitions%}
+                    <li>
+                        <h2>{{comp['name']}}</h2>
+                        <p>Date: {{comp['date']}}</p>
+                        <p>Number of Places: <strong>{{comp['numberOfPlaces']}}</strong></p>
+                        {%if comp['numberOfPlaces']|int >0%}
+                        <a href="{{ url_for('book',competition=comp['name'],club=club['name']) }}">Book Places</a>
+                        {%else%}
+                        <a href="{{ url_for('book',competition=comp['name'],club=club['name']) }}" aria-disabled="true">Book Places</a>
+                        {%endif%}
+                    </li>
+                    <hr />
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {%endwith%}
 
 </body>
 </html>
